@@ -22,7 +22,7 @@ def get_hospitals_from_json(file_path):
         return hospitals
 
 # JSON 파일 경로 설정
-json_file_path = 'hospitals_data.json'
+json_file_path = 'ChungcheongHospital.json'
 
 # API 엔드포인트 정의
 @app.get("/hospitals/", response_model=list[Hospital])

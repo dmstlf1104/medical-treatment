@@ -1,7 +1,7 @@
 import sqlite3
 
 # SQLite 데이터베이스 파일 경로
-db_file = 'ChungcheongHospital.db'
+db_file = 'Busan.db'
 
 # SQLite 연결 설정
 conn = sqlite3.connect(db_file)
@@ -14,7 +14,6 @@ cursor.execute('''
         name TEXT,
         address TEXT,
         subject TEXT,
-        phone TEXT,
         lat REAL,
         lng REAL
     )
@@ -34,4 +33,4 @@ for column in table_info:
 # 연결 종료
 conn.close()
 
-print("SQLite 데이터베이스 및 테이블 생성 완료: ChungcheongHospital.db")
+print("SQLite 데이터베이스 및 테이블 생성 완료: Busan.db")

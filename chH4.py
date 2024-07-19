@@ -41,7 +41,7 @@ data_to_save = {
 }
 
 # JSON 파일로 저장
-output_file = 'hospitals_data.json'
+output_file = 'ChungcheongHospital.json'
 with open(output_file, 'w', encoding='utf-8') as jsonfile:
     json.dump(data_to_save, jsonfile, ensure_ascii=False, indent=4)
 

@@ -12,7 +12,7 @@ with open(file_path, 'rb') as f:
     encoding = result['encoding']
 
 # SQLite 데이터베이스 파일 경로
-db_file = 'C:/Users/admin/Documents/GitHub/medical-treatment/ChungcheongHospital.db'
+db_file = 'ChungcheongHospital.db'
 
 # SQLite 연결 설정
 conn = sqlite3.connect(db_file)
