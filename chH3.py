@@ -8,7 +8,7 @@ conn = sqlite3.connect(db_file)
 cursor = conn.cursor()
 
 # hospitals 테이블에서 모든 데이터 조회
-cursor.execute('SELECT * FROM hospitals')
+cursor.execute('SELECT * FROM Hospitals')
 rows = cursor.fetchall()
 
 # 조회 결과 출력

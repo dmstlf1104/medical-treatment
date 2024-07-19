@@ -31,25 +31,31 @@ with open(file_path, 'r', newline='', encoding=encoding) as csvfile:
             if operating_status == '폐업':
                 continue
             
+            # WGS84 위도와 경도 데이터가 빈 문자열이면 해당 병원 데이터 삽입하지 않음
+            lat_str = row['좌표정보(x)'].strip()
+            lng_str = row['좌표정보(y)'].strip()
+            
+            if lat_str == '' or lng_str == '':
+                continue
+            
+            lat = float(lat_str)
+            lng = float(lng_str)
+            
             # 데이터 삽입
-            Hospital_name = row['사업장명']
+            name = row['사업장명']
             
             # 소재지전체주소 또는 도로명전체주소 사용
             if row['소재지전체주소']:
-                Hospital_Map = row['소재지전체주소']
+                address = row['소재지전체주소']
             else:
-                Hospital_Map = row['도로명전체주소']
+                address = row['도로명전체주소']
             
-            medical_subject = row['진료과목내용명']
-            phone_number = row['소재지전화']
-            
-            # WGS84위도, 경도 데이터가 빈 문자열이면 None 처리
-            latitude = float(row['좌표정보(x)']) if row['좌표정보(x)'].strip() else None
-            longitude = float(row['좌표정보(y)']) if row['좌표정보(y)'].strip() else None
+            subject = row['진료과목내용명']
+            phone = row['소재지전화']
             
             # 데이터베이스에 삽입
-            cursor.execute("INSERT INTO hospitals (Hospital_name, Hospital_Map, medical_subject, phone_number, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)",
-                           (Hospital_name, Hospital_Map, medical_subject, phone_number, latitude, longitude))
+            cursor.execute("INSERT INTO Hospitals (Name, Address, Subject, Phone, Lat, Lng) VALUES (?, ?, ?, ?, ?, ?)",
+                           (name, address, subject, phone, lat, lng))
 
 # 변경사항 저장 및 연결 종료
 conn.commit()

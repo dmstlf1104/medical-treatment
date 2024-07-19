@@ -11,12 +11,12 @@ cursor = conn.cursor()
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS hospitals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Hospital_name TEXT,
-        Hospital_Map TEXT,
-        medical_subject TEXT,
-        phone_number TEXT,
-        latitude REAL,
-        longitude REAL
+        name TEXT,
+        address TEXT,
+        subject TEXT,
+        phone TEXT,
+        lat REAL,
+        lng REAL
     )
 ''')
 
@@ -24,7 +24,7 @@ cursor.execute('''
 conn.commit()
 
 # hospitals 테이블 구조 확인
-cursor.execute("PRAGMA table_info(hospitals);")
+cursor.execute("PRAGMA table_info(Hospitals);")
 table_info = cursor.fetchall()
 
 # 결과 출력
