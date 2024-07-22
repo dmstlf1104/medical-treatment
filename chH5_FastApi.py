@@ -10,7 +10,6 @@ class Hospital(BaseModel):
     name: str
     address: str
     subject: str
-    phone: str
     lat: float | None
     lng: float | None
 
@@ -22,7 +21,7 @@ def get_hospitals_from_json(file_path):
         return hospitals
 
 # JSON 파일 경로 설정
-json_file_path = 'ChungcheongHospital.json'
+json_file_path = 'Hospital.json'
 
 # API 엔드포인트 정의
 @app.get("/hospitals/", response_model=list[Hospital])
@@ -33,7 +32,6 @@ def read_hospitals():
             name=hosp["name"],
             address=hosp["address"],
             subject=hosp["subject"],
-            phone=hosp["phone"],
             lat=float(hosp["lat"]) if hosp["lat"] is not None else None,
             lng=float(hosp["lng"]) if hosp["lng"] is not None else None
         ) for hosp in hospitals]
@@ -43,4 +41,4 @@ def read_hospitals():
 # FastAPI 실행 (개발 서버로 실행)
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="192.168.1.22", port=8000)
+    uvicorn.run(app, host="192.168.171.6", port=8000)

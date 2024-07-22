@@ -1,7 +1,7 @@
 import sqlite3
 
 # SQLite 데이터베이스 파일 경로
-db_file = 'ChungcheongHospital.db'
+db_file = 'Hospital.db'
 
 # SQLite 연결 설정
 conn = sqlite3.connect(db_file)

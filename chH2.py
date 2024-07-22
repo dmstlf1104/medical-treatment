@@ -3,7 +3,7 @@ import sqlite3
 import chardet
 
 # CSV 파일 경로 설정
-file_path = 'ChungcheongHospital.csv'
+file_path = 'Hospital.csv'
 
 # 파일을 바이너리 모드로 열어서 인코딩 확인
 with open(file_path, 'rb') as f:
@@ -12,7 +12,7 @@ with open(file_path, 'rb') as f:
     encoding = result['encoding']
 
 # SQLite 데이터베이스 파일 경로
-db_file = 'ChungcheongHospital.db'
+db_file = 'Hospital.db'
 
 # SQLite 연결 설정
 conn = sqlite3.connect(db_file)
@@ -32,8 +32,8 @@ with open(file_path, 'r', newline='', encoding=encoding) as csvfile:
                 continue
             
             # WGS84 위도와 경도 데이터가 빈 문자열이면 해당 병원 데이터 삽입하지 않음
-            lat_str = row['좌표정보(x)'].strip()
-            lng_str = row['좌표정보(y)'].strip()
+            lat_str = row['WGS84위도'].strip()
+            lng_str = row['WGS84경도'].strip()
             
             if lat_str == '' or lng_str == '':
                 continue
@@ -45,17 +45,16 @@ with open(file_path, 'r', newline='', encoding=encoding) as csvfile:
             name = row['사업장명']
             
             # 소재지전체주소 또는 도로명전체주소 사용
-            if row['소재지전체주소']:
-                address = row['소재지전체주소']
+            if row['소재지도로명주소']:
+                address = row['소재지도로명주소']
             else:
-                address = row['도로명전체주소']
+                address = row['소재지지번주소']
             
-            subject = row['진료과목내용명']
-            phone = row['소재지전화']
+            subject = row['진료과목내용']
             
             # 데이터베이스에 삽입
-            cursor.execute("INSERT INTO Hospitals (Name, Address, Subject, Phone, Lat, Lng) VALUES (?, ?, ?, ?, ?, ?)",
-                           (name, address, subject, phone, lat, lng))
+            cursor.execute("INSERT INTO Hospitals (Name, Address, Subject, Lat, Lng) VALUES (?, ?, ?, ?, ?)",
+                           (name, address, subject, lat, lng))
 
 # 변경사항 저장 및 연결 종료
 conn.commit()

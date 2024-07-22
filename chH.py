@@ -2,7 +2,7 @@ import csv
 import chardet
 
 # CSV 파일 경로 설정
-file_path = 'Busan.csv'
+file_path = 'Hospital.csv'
 
 # 파일을 바이너리 모드로 열어서 인코딩 확인
 with open(file_path, 'rb') as f:

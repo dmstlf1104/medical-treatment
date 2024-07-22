@@ -1,7 +1,7 @@
 import sqlite3
 
 # SQLite 데이터베이스 파일 경로
-db_file = 'Busan.db'
+db_file = 'Hospital.db'
 
 # SQLite 연결 설정
 conn = sqlite3.connect(db_file)
@@ -33,4 +33,4 @@ for column in table_info:
 # 연결 종료
 conn.close()
 
-print("SQLite 데이터베이스 및 테이블 생성 완료: Busan.db")
+print("SQLite 데이터베이스 및 테이블 생성 완료: Hospital.db")
