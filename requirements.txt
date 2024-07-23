@@ -1,0 +1,15 @@
+#try.py 실행할 때 필요한 pip 항목 , conda install 항목은 yml파일
+langchain
+langchain-openai
+langchain_community
+streamlit
+accelerate
+transformers
+huggingface-hub
+pymupdf
+sentence-transformers
+gtts
+diffusers
+ftfy
+sentencepiece
+safetensors

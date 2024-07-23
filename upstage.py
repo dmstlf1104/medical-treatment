@@ -1,7 +1,7 @@
 import requests
 
 api_key = "up_8sqFsKHvhK5EqZeiO8p8DfjXG2yZ7"
-filename = "exp.jpg"
+filename = "exp3.jpg"
 
 url = "https://api.upstage.ai/v1/document-ai/ocr"
 headers = {"Authorization": f"Bearer {api_key}"}
