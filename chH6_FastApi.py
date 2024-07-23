@@ -46,4 +46,4 @@ def read_hospitals():
 # FastAPI 실행 (개발 서버로 실행)
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="192.168.207.101", port=8000)
+    uvicorn.run(app, host="192.168.171.5", port=8000)
