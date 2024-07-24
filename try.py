@@ -5,23 +5,23 @@ import time
 from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from langchain.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
 
-# Initialize the FastAPI app
+# FastAPI 앱 초기화
 app = FastAPI()
 
-# Initialize the language model
+# 언어 모델 초기화
 llm = Ollama(model="bnksys/yanolja-eeve-korean-instruct-10.8b:latest")
 
-# Define the prompt template
+# 프롬프트 템플릿 정의
 prompt = ChatPromptTemplate.from_messages([
     ("system", "당신은 AI 의료 어시스턴트 힐리입니다. 다음 의료 보고서를 보고 아무것도 모르는 환자들이 이해하기 쉽고 귀엽게 대답해주세요. 예를 들어 결과는 ---- 나왔습니다. 자세한 상담은 의사 선생님과 하시길 바라요!. 의료 보고서:"),
     ("user", "{input}")
 ])
 
-# API key for OCR service
+# OCR 서비스 API 키
 api_key = "up_8sqFsKHvhK5EqZeiO8p8DfjXG2yZ7"
 url = "https://api.upstage.ai/v1/document-ai/ocr"
 headers = {"Authorization": f"Bearer {api_key}"}
@@ -39,29 +39,13 @@ def retrieval_qa_chain(input_text, documents):
     response = llm(full_prompt)
     end_time = time.time()
     print(f"Prediction time: {end_time - start_time:.2f} seconds")
+    print(f"Response: {response}") 
     return response
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    return """
-    <html>
-        <head>
-            <title>의료 보고서 해석기</title>
-        </head>
-        <body>
-            <h1>의료 보고서 파일을 업로드하세요</h1>
-            <form action="/upload" enctype="multipart/form-data" method="post">
-                <input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png">
-                <input type="submit">
-            </form>
-        </body>
-    </html>
-    """
-
-@app.post("/upload/")
+@app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     try:
-        # Read and process the image file
+        # 이미지 파일 읽기 및 처리
         image = Image.open(BytesIO(await file.read()))
         with BytesIO() as buffer:
             image.save(buffer, format="PNG")
@@ -74,15 +58,21 @@ async def upload_file(file: UploadFile = File(...)):
             text = result.get('text', '')
             documents = preprocess_text(text)
 
-            # Example user input; in a real app, this should come from the request
+            # 예제 사용자 입력; 실제 앱에서는 요청에서 가져와야 합니다
             user_input = "병원에서 받은 검사 결과지를 해석해줘"
-            result = retrieval_qa_chain(user_input, documents)
+            analysis_result = retrieval_qa_chain(user_input, documents)
 
-            return JSONResponse(content={"ocr_text": documents, "analysis_result": result})
+            # TermResult 데이터 클래스와 호환되는 배열로 결과 구성
+            result_array = [
+                {"term_ko": "OCR 추출 텍스트", "term_en": "", "explanation": documents},
+                {"term_ko": "분석 결과", "term_en": "", "explanation": analysis_result}
+            ]
+
+            return JSONResponse(content=result_array)
         else:
-            return JSONResponse(content={"error": "OCR 추출에 실패했습니다."}, status_code=response.status_code)
+            return JSONResponse(content=[{"term_ko": "Error", "term_en": "", "explanation": "OCR 추출에 실패했습니다."}], status_code=response.status_code)
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(content=[{"term_ko": "Error", "term_en": "", "explanation": str(e)}], status_code=500)
 
 if __name__ == "__main__":
     import uvicorn
