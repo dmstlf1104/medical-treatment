@@ -1,0 +1,30 @@
+name: ai_env
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.8
+  - pip
+  - pip:
+    - langchain
+    - langchain-openai
+    - langchain_community
+    - streamlit
+    - accelerate
+    - transformers
+    - huggingface-hub
+    - pymupdf 
+    - sentence-transformers
+    - faiss-cpu
+    - faiss-gpu
+    - gtts
+    - diffusers
+    - ftfy
+    - sentencepiece
+    - safetensors
