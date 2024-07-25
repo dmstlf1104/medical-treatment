@@ -1,14 +1,14 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
-from langchain.llms import Ollama
-from langchain_core.prompts import ChatPromptTemplate
-import mysql.connector
 import os
 import requests
 import re
 import time
 from io import BytesIO
 from PIL import Image
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+from langchain.llms import Ollama
+from langchain_core.prompts import ChatPromptTemplate
+import mysql.connector
 
 # FastAPI 앱 초기화
 app = FastAPI()
@@ -27,14 +27,6 @@ api_key = "up_8sqFsKHvhK5EqZeiO8p8DfjXG2yZ7"
 url = "https://api.upstage.ai/v1/document-ai/ocr"
 headers = {"Authorization": f"Bearer {api_key}"}
 
-# 데이터베이스 연결 정보
-config = {
-    'host': '192.168.1.5',
-    'user': 'tester',
-    'password': '1234',
-    'database': 'medical_records_db',
-}
-
 def preprocess_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     text = re.sub(r'[^\w\s.,?]', '', text)
@@ -51,24 +43,33 @@ def retrieval_qa_chain(input_text, documents):
     print(f"Response: {response}") 
     return response
 
-def save_to_database(ocr_text, analysis_result):
-    try:
-        conn = mysql.connector.connect(**config)
-        cursor = conn.cursor()
+# 데이터베이스 연결 정보
+db_config = {
+    'host': '192.168.1.5',
+    'user': 'tester',
+    'password': '1234',
+    'database': 'medical_records_db',
+}
 
-        # SQL 쿼리 작성
-        query = """
-        INSERT INTO medical_reports (ocr_text, analysis_result, created_at)
-        VALUES (%s, %s, NOW())
-        """
-        cursor.execute(query, (ocr_text, analysis_result))
-        conn.commit()
+# 데이터베이스 초기화 및 테이블 생성
+def init_db():
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    create_table_query = """
+    CREATE TABLE IF NOT EXISTS medical_records (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ocr_text TEXT,
+        analysis_result TEXT
+    )
+    """
+    cursor.execute(create_table_query)
+    connection.commit()
+    cursor.close()
+    connection.close()
 
-        cursor.close()
-        conn.close()
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        raise
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
@@ -90,8 +91,14 @@ async def upload_file(file: UploadFile = File(...)):
             user_input = "병원에서 받은 검사 결과지를 해석해줘"
             analysis_result = retrieval_qa_chain(user_input, documents)
 
-            # 데이터베이스에 저장
-            save_to_database(documents, analysis_result)
+            # 데이터베이스에 OCR 결과 및 분석 결과 삽입
+            connection = mysql.connector.connect(**db_config)
+            cursor = connection.cursor()
+            insert_data_query = "INSERT INTO medical_records (ocr_text, analysis_result) VALUES (%s, %s)"
+            cursor.execute(insert_data_query, (documents, analysis_result))
+            connection.commit()
+            cursor.close()
+            connection.close()
 
             # TermResult 데이터 클래스와 호환되는 배열로 결과 구성
             result_array = [
