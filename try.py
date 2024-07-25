@@ -1,13 +1,14 @@
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+from langchain.llms import Ollama
+from langchain_core.prompts import ChatPromptTemplate
+import mysql.connector
 import os
 import requests
 import re
 import time
 from io import BytesIO
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
-from langchain.llms import Ollama
-from langchain_core.prompts import ChatPromptTemplate
 
 # FastAPI 앱 초기화
 app = FastAPI()
@@ -26,6 +27,14 @@ api_key = "up_8sqFsKHvhK5EqZeiO8p8DfjXG2yZ7"
 url = "https://api.upstage.ai/v1/document-ai/ocr"
 headers = {"Authorization": f"Bearer {api_key}"}
 
+# 데이터베이스 연결 정보
+config = {
+    'host': '192.168.1.5',
+    'user': 'tester',
+    'password': '1234',
+    'database': 'medical_records_db',
+}
+
 def preprocess_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     text = re.sub(r'[^\w\s.,?]', '', text)
@@ -41,6 +50,25 @@ def retrieval_qa_chain(input_text, documents):
     print(f"Prediction time: {end_time - start_time:.2f} seconds")
     print(f"Response: {response}") 
     return response
+
+def save_to_database(ocr_text, analysis_result):
+    try:
+        conn = mysql.connector.connect(**config)
+        cursor = conn.cursor()
+
+        # SQL 쿼리 작성
+        query = """
+        INSERT INTO medical_reports (ocr_text, analysis_result, created_at)
+        VALUES (%s, %s, NOW())
+        """
+        cursor.execute(query, (ocr_text, analysis_result))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        raise
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
@@ -62,6 +90,9 @@ async def upload_file(file: UploadFile = File(...)):
             user_input = "병원에서 받은 검사 결과지를 해석해줘"
             analysis_result = retrieval_qa_chain(user_input, documents)
 
+            # 데이터베이스에 저장
+            save_to_database(documents, analysis_result)
+
             # TermResult 데이터 클래스와 호환되는 배열로 결과 구성
             result_array = [
                 {"term_ko": "OCR 추출 텍스트", "term_en": "", "explanation": documents},
@@ -76,4 +107,4 @@ async def upload_file(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="192.168.207.15", port=8000)
+    uvicorn.run(app, host="192.168.1.2", port=8000)
