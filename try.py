@@ -114,4 +114,4 @@ async def upload_file(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="192.168.1.2", port=8000)
+    uvicorn.run(app, host="192.168.1.4", port=8000)
