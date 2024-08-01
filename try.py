@@ -80,7 +80,7 @@ def init_db():
 def on_startup():
     init_db()
 
-@app.websocket("/wss")
+@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
@@ -100,8 +100,7 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
     try:
         # 로딩바 시작 (이미지 업로드 후)
         pbar = tqdm(total=100, desc="Processing", ncols=100, position=0, leave=True)
-        pbar.set_description("Processing")
-        
+
         # 이미지 파일 읽기
         image = Image.open(BytesIO(await file.read()))
         with BytesIO() as buffer:
@@ -109,28 +108,20 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
             buffer.seek(0)
             files = {"document": buffer}
             pbar.update(10)  # 초기 진행 상황
-            if websocket:
-                await websocket.send_text("10")  # 10% 진행 상황 전송
 
             response = requests.post(url, headers=headers, files=files)
             if response.status_code == 200:
                 pbar.update(40)  # OCR 처리 후 진행 상황
-                if websocket:
-                    await websocket.send_text("50")  # 50% 진행 상황 전송
 
                 result = response.json()
                 text = result.get('text', '')
                 documents = preprocess_text(text)
                 pbar.update(20)  # 텍스트 전처리 후 진행 상황
-                if websocket:
-                    await websocket.send_text("70")  # 70% 진행 상황 전송
 
                 # 예제 사용자 입력; 실제 앱에서는 요청에서 가져와야 합니다
                 user_input = "병원에서 받은 검사 결과지를 해석해줘"
                 analysis_result = retrieval_qa_chain(user_input, documents)
                 pbar.update(30)  # 질의응답 처리 후 진행 상황
-                if websocket:
-                    await websocket.send_text("100")  # 100% 진행 상황 전송
 
                 # 로딩바 100% 완료
                 pbar.n = 100
@@ -147,7 +138,7 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
                 # 데이터베이스에 OCR 결과 및 분석 결과 삽입
                 connection = mysql.connector.connect(**db_config)
                 cursor = connection.cursor()
-                insert_data_query = "INSERT INTO medical_records (id, ocr_text, analysis_result) VALUES (%s, %s)"
+                insert_data_query = "INSERT INTO medical_records (ocr_text, analysis_result) VALUES (%s, %s)"
                 cursor.execute(insert_data_query, (documents, analysis_result))
                 connection.commit()
                 cursor.close()
