@@ -54,7 +54,7 @@ def retrieval_qa_chain(input_text, documents):
 
 # 데이터베이스 연결 정보
 db_config = {
-    'host': '192.168.1.2',
+    'host': ' 192.168.247.41',
     'user': 'tester',
     'password': '1234',
     'database': 'medical_records_db',
@@ -66,10 +66,9 @@ def init_db():
     cursor = connection.cursor()
     create_table_query = """
     CREATE TABLE IF NOT EXISTS medical_records (
-        Idx VARCHAR(30),
+        id INT AUTO_INCREMENT PRIMARY KEY,
         ocr_text TEXT,
-        analysis_result TEXT,
-        record DATE
+        analysis_result TEXT
     )
     """
     cursor.execute(create_table_query)
@@ -148,7 +147,7 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
                 # 데이터베이스에 OCR 결과 및 분석 결과 삽입
                 connection = mysql.connector.connect(**db_config)
                 cursor = connection.cursor()
-                insert_data_query = "INSERT INTO medical_records (Idx VARCHAR, ocr_text, analysis_result, record DATE) VALUES (%s, %s)"
+                insert_data_query = "INSERT INTO medical_records (id, ocr_text, analysis_result) VALUES (%s, %s)"
                 cursor.execute(insert_data_query, (documents, analysis_result))
                 connection.commit()
                 cursor.close()
@@ -171,4 +170,4 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="192.168.1.4", port=8000)
+    uvicorn.run(app, host="192.168.247.188", port=8000)
