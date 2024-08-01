@@ -2,7 +2,7 @@ import mysql.connector
 
 # 데이터베이스 연결 정보
 config = {
-    'host': '192.168.1.5',
+    'host': ' 192.168.247.41',
     'user': 'tester',
     'password': '1234',
     'database': 'medical_records_db',

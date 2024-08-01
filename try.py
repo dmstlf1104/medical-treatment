@@ -54,31 +54,11 @@ def retrieval_qa_chain(input_text, documents):
 
 # 데이터베이스 연결 정보
 db_config = {
-    'host': ' 192.168.247.41',
+    'host': '192.168.247.41',
     'user': 'tester',
     'password': '1234',
     'database': 'medical_records_db',
 }
-
-# 데이터베이스 초기화 및 테이블 생성
-def init_db():
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS medical_records (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        ocr_text TEXT,
-        analysis_result TEXT
-    )
-    """
-    cursor.execute(create_table_query)
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -138,11 +118,17 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
                 # 데이터베이스에 OCR 결과 및 분석 결과 삽입
                 connection = mysql.connector.connect(**db_config)
                 cursor = connection.cursor()
-                insert_data_query = "INSERT INTO medical_records (ocr_text, analysis_result) VALUES (%s, %s)"
-                cursor.execute(insert_data_query, (documents, analysis_result))
-                connection.commit()
-                cursor.close()
-                connection.close()
+                try:
+                    insert_data_query = "INSERT INTO medical_records (ocr_text, analysis_result) VALUES (%s, %s)"
+                    cursor.execute(insert_data_query, (documents, analysis_result))
+                    connection.commit()
+                    print("데이터가 성공적으로 삽입되었습니다.")
+                except mysql.connector.Error as db_error:
+                    print(f"Database insertion error: {db_error}")
+                finally:
+                    cursor.close()
+                    connection.close()
+                    print("MySQL 연결이 종료되었습니다.")
 
                 if websocket:
                     await websocket.send_json(result_array)
@@ -157,6 +143,7 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
         error_msg = str(e)
         if websocket:
             await websocket.send_json([{"term_ko": "Error", "term_en": "", "explanation": error_msg}])
+        print(f"Error during file processing: {error_msg}")
         return JSONResponse(content=[{"term_ko": "Error", "term_en": "", "explanation": error_msg}], status_code=500)
 
 if __name__ == "__main__":
