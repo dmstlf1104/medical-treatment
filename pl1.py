@@ -1,7 +1,7 @@
 import json
 
 # Load the JSON data from the file with UTF-8 encoding
-with open('merged_hospitals_updated_1.json', 'r', encoding='utf-8') as file:
+with open('merged_hospitals_updated.json', 'r', encoding='utf-8') as file:
     ch_hospitals1 = json.load(file)
 
 # Function to get hospital information by name
