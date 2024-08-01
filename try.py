@@ -4,10 +4,9 @@ import re
 import time
 from io import BytesIO
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile, WebSocket
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from tqdm import tqdm
 from langchain.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
 import mysql.connector
@@ -60,54 +59,25 @@ db_config = {
     'database': 'medical_records_db',
 }
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_text()
-            if data == "start":
-                await websocket.send_text("Progress started")
-            else:
-                await websocket.send_text("Unknown command")
-    except Exception as e:
-        print(f"WebSocket connection error: {e}")
-    finally:
-        await websocket.close()
-
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None):
+async def upload_file(file: UploadFile = File(...)):
     try:
-        # 로딩바 시작 (이미지 업로드 후)
-        pbar = tqdm(total=100, desc="Processing", ncols=100, position=0, leave=True)
-
         # 이미지 파일 읽기
         image = Image.open(BytesIO(await file.read()))
         with BytesIO() as buffer:
             image.save(buffer, format="PNG")
             buffer.seek(0)
             files = {"document": buffer}
-            pbar.update(10)  # 초기 진행 상황
 
             response = requests.post(url, headers=headers, files=files)
             if response.status_code == 200:
-                pbar.update(40)  # OCR 처리 후 진행 상황
-
                 result = response.json()
                 text = result.get('text', '')
                 documents = preprocess_text(text)
-                pbar.update(20)  # 텍스트 전처리 후 진행 상황
 
                 # 예제 사용자 입력; 실제 앱에서는 요청에서 가져와야 합니다
                 user_input = "병원에서 받은 검사 결과지를 해석해줘"
                 analysis_result = retrieval_qa_chain(user_input, documents)
-                pbar.update(30)  # 질의응답 처리 후 진행 상황
-
-                # 로딩바 100% 완료
-                pbar.n = 100
-                pbar.last_print_n = 100
-                pbar.update(0)
-                pbar.close()
 
                 # 결과 구성
                 result_array = [
@@ -128,21 +98,13 @@ async def upload_file(file: UploadFile = File(...), websocket: WebSocket = None)
                 finally:
                     cursor.close()
                     connection.close()
-                    print("MySQL 연결이 종료되었습니다.")
 
-                if websocket:
-                    await websocket.send_json(result_array)
                 return JSONResponse(content=result_array)
             else:
-                pbar.close()
                 error_msg = "OCR 추출에 실패했습니다."
-                if websocket:
-                    await websocket.send_json([{"term_ko": "Error", "term_en": "", "explanation": error_msg}])
                 return JSONResponse(content=[{"term_ko": "Error", "term_en": "", "explanation": error_msg}], status_code=response.status_code)
     except Exception as e:
         error_msg = str(e)
-        if websocket:
-            await websocket.send_json([{"term_ko": "Error", "term_en": "", "explanation": error_msg}])
         print(f"Error during file processing: {error_msg}")
         return JSONResponse(content=[{"term_ko": "Error", "term_en": "", "explanation": error_msg}], status_code=500)
 
