@@ -1,7 +1,7 @@
 import json
 
 # JSON 파일을 UTF-8 인코딩으로 로드
-with open('merged_hospitals.json', 'r', encoding='utf-8') as file:
+with open('merged_hospitals_updated.json', 'r', encoding='utf-8') as file:
     merged_data = json.load(file)
 
 with open('CH_hospitals1.json', 'r', encoding='utf-8') as file:
@@ -26,7 +26,7 @@ for hospital in merged_hospitals:
 
 # 변경된 데이터를 UTF-8 인코딩으로 저장
 merged_data['data'] = merged_hospitals  # 원본 구조를 유지
-with open('merged_hospitals_updated.json', 'w', encoding='utf-8') as file:
+with open('merged_hospitals_updated_1.json', 'w', encoding='utf-8') as file:
     json.dump(merged_data, file, ensure_ascii=False, indent=4)
 
 print("업데이트가 완료되었습니다. 'merged_hospitals_updated.json' 파일을 확인하세요.")

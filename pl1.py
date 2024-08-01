@@ -1,7 +1,7 @@
 import json
 
 # Load the JSON data from the file with UTF-8 encoding
-with open('merged_hospitals_updated.json', 'r', encoding='utf-8') as file:
+with open('merged_hospitals_updated_1.json', 'r', encoding='utf-8') as file:
     ch_hospitals1 = json.load(file)
 
 # Function to get hospital information by name
@@ -12,7 +12,7 @@ def get_hospital_info(hospitals, hospital_name):
     return None
 
 # Check if "천안자생한방병원" exists and get its information
-hospital_name_to_check = "서산중앙병원"
+hospital_name_to_check = "공주의료원"
 hospital_info = get_hospital_info(ch_hospitals1, hospital_name_to_check)
 
 if hospital_info:
