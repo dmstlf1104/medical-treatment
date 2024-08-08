@@ -88,12 +88,15 @@ async def upload_file(file: UploadFile = File(...)):
             return JSONResponse(content={"error": "사용자 ID가 저장되어 있지 않습니다."}, status_code=400)
 
         # 이미지 파일 읽기
-        image = Image.open(BytesIO(await file.read()))
+        image_bytes = await file.read()
+        image = Image.open(BytesIO(image_bytes))
         with BytesIO() as buffer:
             image.save(buffer, format="PNG")
-            buffer.seek(0)
-            files = {"document": buffer}
+            image_data = buffer.getvalue()  # 바이너리 데이터
 
+        # OCR API 요청
+        with BytesIO(image_bytes) as buffer:
+            files = {"document": buffer}
             response = requests.post(url, headers=headers, files=files)
             if response.status_code == 200:
                 result = response.json()
@@ -110,12 +113,15 @@ async def upload_file(file: UploadFile = File(...)):
                     {"term_ko": "분석 결과", "term_en": "", "explanation": analysis_result}
                 ]
 
-                # 데이터베이스에 OCR 결과 및 분석 결과 삽입
+                # 데이터베이스에 OCR 결과 및 분석 결과, 이미지 데이터 삽입
                 connection = mysql.connector.connect(**db_config)
                 cursor = connection.cursor()
                 try:
-                    insert_data_query = "INSERT INTO medical_records (user_id, ocr_text, analysis_result) VALUES (%s, %s, %s)"
-                    cursor.execute(insert_data_query, (user_id, documents, analysis_result))
+                    insert_data_query = """
+                        INSERT INTO medical_records (user_id, ocr_text, analysis_result, ocr_image)
+                        VALUES (%s, %s, %s, %s)
+                    """
+                    cursor.execute(insert_data_query, (user_id, documents, analysis_result, image_data))
                     connection.commit()
                     print("데이터가 성공적으로 삽입되었습니다.")
                 except mysql.connector.Error as db_error:
@@ -132,6 +138,7 @@ async def upload_file(file: UploadFile = File(...)):
         error_msg = str(e)
         print(f"Error during file processing: {error_msg}")
         return JSONResponse(content=[{"term_ko": "Error", "term_en": "", "explanation": error_msg}], status_code=500)
+
 
 if __name__ == "__main__":
     import uvicorn
