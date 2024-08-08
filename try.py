@@ -80,7 +80,7 @@ async def send_user_id(userId: str = Body(...)):
         return JSONResponse(content={"error": error_msg}, status_code=500)
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(..., media_type = "iamge/*")):
+async def upload_file(file: UploadFile = File(...)):
     try:
         # 사용자 ID 가져오기
         user_id = user_id_storage.get('current_user_id')
@@ -96,7 +96,7 @@ async def upload_file(file: UploadFile = File(..., media_type = "iamge/*")):
 
         # OCR API 요청
         with BytesIO(image_bytes) as buffer:
-            files = {"file": buffer}
+            files = {"document": buffer}
             response = requests.post(url, headers=headers, files=files)
             if response.status_code == 200:
                 result = response.json()
@@ -142,4 +142,4 @@ async def upload_file(file: UploadFile = File(..., media_type = "iamge/*")):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="192.168.247.188", port=8000)
+    uvicorn.run(app, host="192.168.1.18", port=8000)
