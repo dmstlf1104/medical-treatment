@@ -80,7 +80,7 @@ async def send_user_id(userId: str = Body(...)):
         return JSONResponse(content={"error": error_msg}, status_code=500)
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(..., media_type = "iamge/*")):
     try:
         # 사용자 ID 가져오기
         user_id = user_id_storage.get('current_user_id')
