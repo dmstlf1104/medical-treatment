@@ -96,7 +96,7 @@ async def upload_file(file: UploadFile = File(..., media_type = "iamge/*")):
 
         # OCR API 요청
         with BytesIO(image_bytes) as buffer:
-            files = {"document": buffer}
+            files = {"file": buffer}
             response = requests.post(url, headers=headers, files=files)
             if response.status_code == 200:
                 result = response.json()
